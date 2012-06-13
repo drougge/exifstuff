@@ -3,9 +3,8 @@
 
 from fractions import Fraction
 
-class exif:
-	"""Pretty minimal TIFF container parser.
-	Uses EXIF (0x8769) instead of normal subifd (0x14a)."""
+class tiff:
+	"""Pretty minimal TIFF container parser."""
 	
 	def _STRING(s): # No support for multi string fields
 		return "".join(s).rstrip("\0")
@@ -24,9 +23,10 @@ class exif:
 		 # No TIFF6 fields, sorry
 		}
 	
-	def __init__(self, fh):
+	def __init__(self, fh, subifd=0x14a):
 		from struct import unpack, pack
 		self._fh = fh
+		self._subifd = subifd
 		d = fh.read(4)
 		if d not in ("II*\0", "MM\0*"): raise Exception("Not TIFF")
 		endian = {"M": ">", "I": "<"}[d[0]]
@@ -42,7 +42,7 @@ class exif:
 			self.ifd.append(self._ifdread(next_ifd))
 			next_ifd = self._up1("I", self._fh.read(4))
 		self.subifd = []
-		subifd = self.ifdget(self.ifd[0], 0x8769) or []
+		subifd = self.ifdget(self.ifd[0], self._subifd) or []
 		for next_ifd in subifd:
 			self.subifd.append(self._ifdread(next_ifd))
 	
@@ -127,7 +127,7 @@ class jpeg_wrapper:
 
 fh = open("/tmp/test.jpg", "rb+")
 fh = jpeg_wrapper(fh)
-exif = exif(fh)
+exif = tiff(fh, 0x8769)
 print exif.get(0x829d)
 print repr(exif.get(0x920a))
 print exif.get(0xa405)
