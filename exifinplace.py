@@ -7,6 +7,23 @@ class exif:
 	"""Pretty minimal TIFF container parser.
 	Uses EXIF (0x8769) instead of normal subifd (0x14a)."""
 	
+	def _STRING(s): # No support for multi string fields
+		return "".join(s).rstrip("\0")
+	
+	def _RATIONAL(s):
+		res = []
+		for i in range(0, len(s), 2):
+			res.append(Fraction(*s[i:i+2]))
+		return tuple(res)
+	
+	types = {1: (1, "B" , None),      # BYTE
+		 2: (1, "c", _STRING),    # ASCII
+		 3: (2, "H" , None),      # SHORT
+		 4: (4, "I" , None),      # LONG
+		 5: (8, "II", _RATIONAL), # RATIONAL
+		 # No TIFF6 fields, sorry
+		}
+	
 	def __init__(self, fh):
 		from struct import unpack, pack
 		self._fh = fh
@@ -31,21 +48,16 @@ class exif:
 	
 	def ifdget(self, ifd, tag):
 		if tag in ifd:
-			type, vc, off = ifd[tag]
+			type, vc, d = ifd[tag]
 			print "get",ifd[tag]
-			if type in (3, 4): # SHORT or LONG
-				if vc == 1: return (off,)
-				self._fh.seek(off)
-				dt = {3: "H", 4: "I"}[type]
-				return self._up(dt * vc, self._fh.read(4 * vc))
-			elif type == 2: # STRING
-				self._fh.seek(off)
-				return self._fh.read(vc).rstrip("\0")
-			elif type == 5: # rational
-				self._fh.seek(off)
-				print self._up("II", self._fh.read(8))
-				self._fh.seek(off)
-				return Fraction(*self._up("II", self._fh.read(8)))
+			if type not in self.types: return None
+			tl, fmt, func = self.types[type]
+			if isinstance(d, int): # offset
+				self._fh.seek(d)
+				d = self._fh.read(tl * vc)
+				d = self._up(fmt * vc, d)
+			if func: d = func(d)
+			return d
 	
 	def get(self, tag):
 		return self.ifdget(self.subifd[0], tag)
@@ -57,8 +69,10 @@ class exif:
 		for i in range(count):
 			d = self._fh.read(12)
 			tag, type, vc = self._up("HHI", d[:8])
-			if type == 3 and vc == 1:
-				off = self._up1("H", d[8:10])
+			if type in self.types and self.types[type][0] * vc <= 4:
+				tl, fmt, _ = self.types[type]
+				d = d[8:8 + (tl * vc)]
+				off = self._up(fmt * vc, d)
 			else:
 				off = self._up1("I", d[8:])
 			ifd[tag] = (type, vc, off)
