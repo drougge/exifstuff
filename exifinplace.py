@@ -59,8 +59,10 @@ class tiff:
 			if func: d = func(d)
 			return d
 	
-	def get(self, tag):
-		return self.ifdget(self.subifd[0], tag)
+	def get(self, idx, tag):
+		return self.ifdget(self.ifd[idx], tag)
+	def subget(self, idx, tag):
+		return self.ifdget(self.subifd[idx], tag)
 	
 	def _ifdread(self, next_ifd):
 		ifd = {}
@@ -128,9 +130,9 @@ class jpeg_wrapper:
 fh = open("/tmp/test.jpg", "rb+")
 fh = jpeg_wrapper(fh)
 exif = tiff(fh, 0x8769)
-print exif.get(0x829d)
-print repr(exif.get(0x920a))
-print exif.get(0xa405)
+print exif.subget(0, 0x829d)
+print repr(exif.subget(0, 0x920a))
+print exif.subget(0, 0xa405)
 if 0x829d not in exif.subifd[0] or exif.subifd[0][0x829d][:2] != (5, 1):
 	print "Warning: No/bad FNumber"
 else:
