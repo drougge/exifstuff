@@ -42,14 +42,13 @@ class tiff:
 			self.ifd.append(self._ifdread(next_ifd))
 			next_ifd = self._up1("I", self._fh.read(4))
 		self.subifd = []
-		subifd = self.ifdget(self.ifd[0], self._subifd) or []
+		subifd = self.get(0, self._subifd) or []
 		for next_ifd in subifd:
 			self.subifd.append(self._ifdread(next_ifd))
 	
 	def ifdget(self, ifd, tag):
 		if tag in ifd:
-			type, vc, d = ifd[tag]
-			print "get",ifd[tag]
+			pos, type, vc, d = ifd[tag]
 			if type not in self.types: return None
 			tl, fmt, func = self.types[type]
 			if isinstance(d, int): # offset
@@ -68,6 +67,7 @@ class tiff:
 		ifd = {}
 		self._fh.seek(next_ifd)
 		count = self._up1("H", self._fh.read(2))
+		pos = next_ifd + 2
 		for i in range(count):
 			d = self._fh.read(12)
 			tag, type, vc = self._up("HHI", d[:8])
@@ -77,7 +77,8 @@ class tiff:
 				off = self._up(fmt * vc, d)
 			else:
 				off = self._up1("I", d[8:])
-			ifd[tag] = (type, vc, off)
+			ifd[tag] = (pos, type, vc, off)
+			pos += 12
 		return ifd
 	
 	def write(self, offset, fmt, *data):

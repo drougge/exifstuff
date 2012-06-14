@@ -51,10 +51,10 @@ exif = tiff(fh, 0x8769)
 print exif.subget(0, 0x829d)
 print repr(exif.subget(0, 0x920a))
 print exif.subget(0, 0xa405)
-if 0x829d not in exif.subifd[0] or exif.subifd[0][0x829d][:2] != (5, 1):
+if 0x829d not in exif.subifd[0] or exif.subifd[0][0x829d][1:3] != (5, 1):
 	print "Warning: No/bad FNumber"
 else:
-	exif.write(exif.subifd[0][0x829d][2], "II", 18, 5)
+	exif.write(exif.subifd[0][0x829d][3], "II", 18, 5)
 
 # 0x829d FNumber
 # 0x9202 ApertureValue (doesn't seem to be set?)
