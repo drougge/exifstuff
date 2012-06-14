@@ -25,7 +25,7 @@ class tiff:
 	
 	def __init__(self, fh, subifd=0x14a):
 		from struct import unpack, pack
-		self._fh = fh
+		self.fh = fh
 		self._subifd = subifd
 		d = fh.read(4)
 		if d not in ("II*\0", "MM\0*"): raise Exception("Not TIFF")
@@ -40,7 +40,7 @@ class tiff:
 		self.ifd = []
 		while next_ifd:
 			self.ifd.append(self._ifdread(next_ifd))
-			next_ifd = self._up1("I", self._fh.read(4))
+			next_ifd = self._up1("I", self.fh.read(4))
 		self.subifd = []
 		subifd = self.get(0, self._subifd) or []
 		for next_ifd in subifd:
@@ -52,8 +52,8 @@ class tiff:
 			if type not in self.types: return None
 			tl, fmt, func = self.types[type]
 			if isinstance(d, int): # offset
-				self._fh.seek(d)
-				d = self._fh.read(tl * vc)
+				self.fh.seek(d)
+				d = self.fh.read(tl * vc)
 				d = self._up(fmt * vc, d)
 			if func: d = func(d)
 			return d
@@ -65,11 +65,11 @@ class tiff:
 	
 	def _ifdread(self, next_ifd):
 		ifd = {}
-		self._fh.seek(next_ifd)
-		count = self._up1("H", self._fh.read(2))
+		self.fh.seek(next_ifd)
+		count = self._up1("H", self.fh.read(2))
 		pos = next_ifd + 2
 		for i in range(count):
-			d = self._fh.read(12)
+			d = self.fh.read(12)
 			tag, type, vc = self._up("HHI", d[:8])
 			if type in self.types and self.types[type][0] * vc <= 4:
 				tl, fmt, _ = self.types[type]
@@ -83,5 +83,5 @@ class tiff:
 	
 	def write(self, offset, fmt, *data):
 		data = self._pack(fmt, *data)
-		self._fh.seek(offset)
-		self._fh.write(data)
+		self.fh.seek(offset)
+		self.fh.write(data)
