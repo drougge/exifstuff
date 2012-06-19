@@ -2,6 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 
 from tiff import tiff
+from sys import argv
 
 class jpeg_wrapper:
 	"""Pretend to be a file that can only access the EXIF portion of a JPEG"""
@@ -45,16 +46,22 @@ class jpeg_wrapper:
 		if len(data) > left: raise Exception("Overflow")
 		return self.fh.write(data)
 
-fh = open("/tmp/test.jpg", "rb+")
-fh = jpeg_wrapper(fh)
-exif = tiff(fh, 0x8769)
-print exif.subget(0, 0x829d)
-print repr(exif.subget(0, 0x920a))
-print exif.subget(0, 0xa405)
-if 0x829d not in exif.subifd[0] or exif.subifd[0][0x829d][1:3] != (5, 1):
-	print "Warning: No/bad FNumber"
-else:
-	exif.write(exif.subifd[0][0x829d][3], "II", 18, 5)
+for fn in argv[1:]:
+	print fn
+	fh = open(fn, "rb+")
+	try:
+		fh = jpeg_wrapper(fh)
+	except Exception:
+		fh.seek(0)
+	exif = tiff(fh, 0x8769)
+	print exif.subget(0, 0x829d)
+	print repr(exif.subget(0, 0x920a))
+	print exif.subget(0, 0xa405)
+	if 0x829d not in exif.subifd[0] or exif.subifd[0][0x829d][1:3] != (5, 1):
+		print "Warning: No/bad FNumber"
+	else:
+		exif.write(exif.subifd[0][0x829d][3], "II", 19, 2)
+	print
 
 # 0x829d FNumber
 # 0x9202 ApertureValue (doesn't seem to be set?)
