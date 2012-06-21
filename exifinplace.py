@@ -63,9 +63,10 @@ re_f   = re.compile(r"(f)/?" + num + r"$")
 args  = []
 p_arg = None
 props = {}
+verbose = False
 
 def arg(a):
-	global p_arg
+	global p_arg, verbose
 	a = a.lower()
 	if p_arg:
 		if a:
@@ -76,6 +77,9 @@ def arg(a):
 		else:
 			args.append((p_arg[0], p_arg[1], None))
 		p_arg = None
+		return True
+	if a in ("--verbose", "-v"):
+		verbose = True
 		return True
 	m = re_arg.match(a) or re_f.match(a)
 	if m:
@@ -123,23 +127,24 @@ def apply_args():
 def bad(p):
 	return Exception("Missing/bad " + names[p])
 
+def fmt_frac(f):
+	if v.denominator == 1: return str(v.numerator)
+	return str(float(f))
+
 for fn in argv[1:]:
 	if arg(fn): continue
 	apply_args()
 	if not props:
 		raise Exception("File before any values " + fn)
-	print fn
+	if verbose: print fn
 	fh = open(fn, "rb+")
 	try:
 		fh = jpeg_wrapper(fh)
 	except Exception:
 		fh.seek(0)
 	exif = tiff(fh, 0x8769)
-	print exif.subget(0, FNum)
-	print repr(exif.subget(0, FL))
-	print exif.subget(0, FL135)
 	for p, v in props.items():
-		print "  " + names[p] + " => " + str(v)
+		if verbose: print "  " + names[p] + " => " + fmt_frac(v)
 		if p not in exif.subifd[0]:
 			raise bad(p)
 		e = exif.subifd[0][p]
@@ -151,4 +156,3 @@ for fn in argv[1:]:
 			exif.write(e[0] + 2, "HII", 4, 1, v.numerator)
 		else:
 			raise bad(p)
-	print
