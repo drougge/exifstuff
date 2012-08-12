@@ -128,7 +128,7 @@ def bad(p):
 	return Exception("Missing/bad " + names[p])
 
 def fmt_frac(f):
-	if v.denominator == 1: return str(v.numerator)
+	if f.denominator == 1: return str(f.numerator)
 	return str(float(f))
 
 for fn in argv[1:]:
