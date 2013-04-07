@@ -48,13 +48,19 @@ class jpeg_wrapper:
 		if len(data) > left: raise Exception("Overflow")
 		return self.fh.write(data)
 
-FNum, FL, FL135, ISO = 0x829d, 0x920a, 0xa405, 0x8827
-names = {FNum: "FNumber", FL: "FocalLength", FL135: "FocalLengthIn35mmFormat", ISO: "ISO"}
+def orient_from_degrees(v):
+	return {90: 6, 180: 3, 270: 8}.get(v, v)
+
+FNum, FL, FL135, ISO, Orientation = 0x829d, 0x920a, 0xa405, 0x8827, 0x0112
+names = {FNum: "FNumber", FL: "FocalLength", FL135: "FocalLengthIn35mmFormat",
+         ISO: "ISO", Orientation: "Orientation"}
 argmap = {"f": FNum, "fnum" : FNum, "fnumber": FNum, "f-number": FNum,
           "fl": FL, "focallength": FL, "focal-length": FL,
           "fl135": FL135, "fl35": FL135, "focallengthin35mm": FL135, "focallengthin35mmformat": FL135,
           "iso": ISO,
+          "orientation": Orientation, "orient": Orientation, "rotate": Orientation,
          }
+value_interpretor = {Orientation: orient_from_degrees}
 
 num    = r"(\d+(?:[\./]\d+)?)"
 re_num = re.compile(num + "$")
@@ -145,10 +151,14 @@ for fn in argv[1:]:
 		fh.seek(0)
 	exif = tiff(fh, 0x8769)
 	for p, v in props.items():
+		v = value_interpretor.get(p, lambda v: v)(v)
 		if verbose: print "  " + names[p] + " => " + fmt_frac(v)
-		if p not in exif.subifd[0]:
+		if p in exif.subifd[0]:
+			e = exif.subifd[0][p]
+		elif p in exif.ifd[0]:
+			e = exif.ifd[0][p]
+		else:
 			raise bad(p)
-		e = exif.subifd[0][p]
 		if e[1:3] == (5, 1):
 			exif.write(e[3], "II", v.numerator, v.denominator)
 		elif e[1] in (1, 3, 4) and e[2] == 1:
