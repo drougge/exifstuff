@@ -48,11 +48,12 @@ class jpeg_wrapper:
 		if len(data) > left: raise Exception("Overflow")
 		return self.fh.write(data)
 
-FNum, FL, FL135 = 0x829d, 0x920a, 0xa405
-names = {FNum: "FNumber", FL: "FocalLength", FL135: "FocalLengthIn35mmFormat"}
+FNum, FL, FL135, ISO = 0x829d, 0x920a, 0xa405, 0x8827
+names = {FNum: "FNumber", FL: "FocalLength", FL135: "FocalLengthIn35mmFormat", ISO: "ISO"}
 argmap = {"f": FNum, "fnum" : FNum, "fnumber": FNum, "f-number": FNum,
           "fl": FL, "focallength": FL, "focal-length": FL,
           "fl135": FL135, "fl35": FL135, "focallengthin35mm": FL135, "focallengthin35mmformat": FL135,
+          "iso": ISO,
          }
 
 num    = r"(\d+(?:[\./]\d+)?)"
