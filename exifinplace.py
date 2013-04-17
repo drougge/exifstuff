@@ -49,7 +49,7 @@ class jpeg_wrapper:
 		return self.fh.write(data)
 
 def orient_from_degrees(v):
-	return {90: 6, 180: 3, 270: 8}.get(v, v)
+	return {90: 6, 180: 3, 270: 8, -90: 8}.get(v, v)
 
 FNum, FL, FL135, ISO, Orientation = 0x829d, 0x920a, 0xa405, 0x8827, 0x0112
 names = {FNum: "FNumber", FL: "FocalLength", FL135: "FocalLengthIn35mmFormat",
@@ -62,7 +62,7 @@ argmap = {"f": FNum, "fnum" : FNum, "fnumber": FNum, "f-number": FNum,
          }
 value_interpretor = {Orientation: orient_from_degrees}
 
-num    = r"(\d+(?:[\./]\d+)?)"
+num    = r"(-?\d+(?:[\./]\d+)?)"
 re_num = re.compile(num + "$")
 re_arg = re.compile(r"(?:--)?(\w+=)?" + num + r"(mm)?$")
 re_f   = re.compile(r"(f)/?" + num + r"$")
