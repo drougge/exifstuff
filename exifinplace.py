@@ -164,6 +164,7 @@ for fn in argv[1:]:
 		elif e[1] in (1, 3, 4) and e[2] == 1:
 			if v.denominator != 1:
 				raise Exception("Value of " + names[p] + " must be integer")
-			exif.write(e[0] + 2, "HII", 4, 1, v.numerator)
+			fmt = {1: "HIB", 3: "HIH", 4: "HII"}
+			exif.write(e[0] + 2, fmt[e[1]], e[1], 1, v.numerator)
 		else:
 			raise bad(p)
