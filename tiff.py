@@ -29,7 +29,7 @@ class tiff:
 		self.fh = fh
 		self._subifd = subifd
 		d = fh.read(4)
-		if d not in ("II*\0", "MM\0*"): raise Exception("Not TIFF")
+		if d not in ("II*\0", "MM\0*", "IIRO"): raise Exception("Not TIFF")
 		endian = {"M": ">", "I": "<"}[d[0]]
 		self._up = lambda fmt, *a: unpack(endian + fmt, *a)
 		self._up1 = lambda *a: self._up(*a)[0]
