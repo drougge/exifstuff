@@ -31,6 +31,7 @@ def find_jpegs(t):
 	find(t.subifd, 0x111, 0x117) # DNG looks like this
 	find(t.subifd, 0x201, 0x202) # NEF looks like this (doesn't work though)
 	find(t.ifd, 0x201, 0x202)    # PEF looks like this
+	find(t.ifd, 0x111, 0x117)    # CR2 looks like this
 	return r
 
 raw_fn, jpg_fn = argv[1:]

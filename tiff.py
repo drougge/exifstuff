@@ -20,7 +20,8 @@ class tiff:
 		 3: (2, "H" , None),      # SHORT
 		 4: (4, "I" , None),      # LONG
 		 5: (8, "II", _RATIONAL), # RATIONAL
-		 # No TIFF6 fields, sorry
+		 10: (8, "ii", _RATIONAL), # SRATIONAL
+		 13: (4, "I", None),      # IFD
 		}
 	
 	def __init__(self, fh, subifd=0x14a):
