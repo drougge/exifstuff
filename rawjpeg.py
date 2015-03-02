@@ -25,7 +25,10 @@ def find_jpegs(t):
 				t.fh.seek(o[0])
 				if t.fh.read(3) == "\xff\xd8\xff": # JPEGish
 					if t.fh.read(1) != "\xc3": # Not DNG RAW data
-						r.append((o[0], l[0], aa[lid], aa[0x100], aa[0x101]))
+						data = (o[0], l[0], aa[lid], aa[0x100], aa[0x101],)
+						if 0x116 in aa: # RowsPerStrip
+							data += (aa[0x116],)
+						r.append(data)
 	
 	r = []
 	find(t.subifd, 0x111, 0x117) # DNG looks like this
@@ -51,7 +54,7 @@ if exists(jpg_fn):
 		if field[1:3] != (4, 1):
 			print("ERROR: Unhandled field format.")
 			exit(1)
-	for field, value in zip(jpg_pos[2:], (len(jpg), w, h)):
+	for field, value in zip(jpg_pos[2:], (len(jpg), w, h, h)):
 		raw.write(field[0] + 8, "I", value)
 	raw.fh.seek(jpg_pos[0], 0)
 	raw.fh.truncate()
